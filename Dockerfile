@@ -6,4 +6,4 @@ RUN . /etc/os-release ; \
    curl -sSL -o /etc/apt/sources.list.d/tailscale.list https://pkgs.tailscale.com/stable/debian/$VERSION_CODENAME.tailscale-keyring.list
 RUN apt-get -qq update && apt-get -qq install tailscale tailscale-archive-keyring
 COPY tailscaled.conf /pies/conf.d
-COPY connect.conf /pies/conf.d
+

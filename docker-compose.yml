@@ -17,15 +17,26 @@ services:
   proxy:
     build:
       context: .
-    environment:
-      KEY: $KEY
     cap_add:
       - NET_ADMIN
+      - MKNOD
     devices:
       - "/dev/net/tun:/dev/net/tun"
     ports:
       - "127.0.0.1:9090:80"
       - "127.0.0.1:9091:443"
       - "127.0.0.1:41641:41641"
+    volumes:
+      - "statedir:/var/lib/tailscale"
     restart: unless-stopped
     logging: *default-logging
+
+volumes:
+  statedir:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "/var/lib/mounts/tailscaled/statedir"
+
+    
