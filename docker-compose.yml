@@ -4,7 +4,7 @@ x-logging:
   options:
     syslog-address: ${SYSLOG_SOCKET:-unixgram:///dev/log}
     syslog-facility: ${SYSLOG_FACILITY:-local0}
-    tag: '{{if (index .ContainerLabels "com.docker.stack.namespace")}}{{index .ContainerLabels "com.docker.stack.namespace"}}/{{end}}{{if (index .ContainerLabels "com.docker.swarm.service.name")}}{{index .ContainerLabels "com.docker.swarm.service.name"}}/{{end}}{{.Name}}/{{.ID}}'
+    tag: 'container/proxy'
 
 x-healthcheck:
   &default-healthcheck
@@ -16,7 +16,7 @@ x-healthcheck:
 services:
   proxy:
     build:
-      context: .
+      context: docker
     cap_add:
       - NET_ADMIN
       - MKNOD
@@ -24,10 +24,13 @@ services:
       - "/dev/net/tun:/dev/net/tun"
     ports:
       - "127.0.0.1:9090:80"
-      - "127.0.0.1:9091:443"
       - "127.0.0.1:41641:41641"
     volumes:
       - "statedir:/var/lib/tailscale"
+    environment:
+      PIES_SYSLOG_SERVER: $PIES_SYSLOG_SERVER
+      SYSLOG_SOCKET:      $SYSLOG_SOCKET 
+      SYSLOG_FACILITY:    $SYSLOG_FACILITY
     restart: unless-stopped
     logging: *default-logging
 

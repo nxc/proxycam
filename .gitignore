@@ -1,0 +1,6 @@
+.env
+.emacs*
+*~
+/docker-compose.override.yml
+/tmp
+/storage
