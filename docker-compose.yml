@@ -31,6 +31,11 @@ services:
       PIES_SYSLOG_SERVER: $PIES_SYSLOG_SERVER
       SYSLOG_SOCKET:      $SYSLOG_SOCKET 
       SYSLOG_FACILITY:    $SYSLOG_FACILITY
+      JWKS_JSON:          $JWKS_JSON
+    restart: unless-stopped
+    logging: *default-logging
+  redis:
+    image: redis:8.4.0
     restart: unless-stopped
     logging: *default-logging
 

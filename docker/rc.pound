@@ -1,0 +1,18 @@
+#!/bin/sh
+
+portwait() {
+    echo "Waiting for $1:$2 to become available"
+    for i in $(seq 1 ${WAIT_TIMEOUT:-60})
+    do
+	if nc -z $1 $2 2>/dev/null; then
+	    return 0
+	fi
+	sleep ${WAIT_SLEEP:-1}
+    done
+    echo >&2 "Timed out waiting for $1:$2"
+    echo >&2 "Terminating"
+    kill -15 1
+}
+
+portwait ${REDIS_HOST:-redis} ${REDIS_PORT:-6379}
+/usr/sbin/pound -F "$@"

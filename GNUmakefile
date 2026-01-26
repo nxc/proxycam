@@ -1,6 +1,6 @@
 export DOCKER_BUILDKIT := 0
 
-PROJECT = proxy
+PROJECT = proxycam
 command = docker compose -p $(PROJECT) \
      -f docker-compose.yml
 ifneq (,$(wildcard docker-compose.override.yml))
