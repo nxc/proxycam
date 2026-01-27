@@ -29,6 +29,4 @@ COPY pies/*.conf /pies/conf.d/
 COPY pound /etc
 COPY rc.pound /etc/
 RUN chmod +x /etc/rc.pound
-# A hack nexessary until
-# https://api.dev.alotta.aws.norse.digital/.well-known/jwks.json works again.
-COPY jwks.json /tmp
+ 

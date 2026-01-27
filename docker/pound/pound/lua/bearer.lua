@@ -1,3 +1,5 @@
+-- Pound functions for Bearer authentication.
+--
 local _M = {}
 local json = require 'dkjson'
 
@@ -5,6 +7,7 @@ local url = os.getenv('JWKS_JSON')
 local filename = '/tmp/jwks.json'
 
 if url and pound.loadctx == 1 then
+   -- Load keys at startup.
    local conn = require 'socket.http'
 
    local body, status, headers = conn.request(url)
@@ -41,26 +44,46 @@ end
 
 local jwt = require 'jwt'
 
+-- Return true if the bearer token from the Authorization header verifies
+-- correctly, and false otherwise.
+--
+-- Before returning, store in stash.bearer a table with the relevant
+-- information:
+--   * On success, stash.bearer.jwt keeps the obtained JWT.
+--   * On error,  stash.bearer.error is the error identifier,
+--     stash.bearer.error_description is a human readable error description,
+--     if available.
+--
+-- Sample usage in pound.cfg file:
+--
+--    Service
+--        Not LuaMatch "bearer.authorized"
+--        Error 401
+--    End
 function _M.authorized()
-   local bh = http.req.headers['X-Proxy-Authorization']
+   local bh = http.req.headers['Authorization']
    if bh == nil then
-      stash.bearer = { error = 'invalid_request' }
+      stash.bearer = { error = 'invalid_request', 
+                       error_description = 'No Authorization header' }
       return false
    end
    local token, n = bh:gsub("^%s*[bB][eE][aA][rR][eE][rR]*%s+([A-Za-z0-9_-]+[.][A-Za-z0-9_-]+[.][A-Za-z0-9_-]+)$", "%1")
    if n == 0 then
-      stash.bearer = { error = 'invalid_request' }
+      stash.bearer = { error = 'invalid_request', 
+                       error_description = 'Malformed token: ' .. bh }
       return false
    end
    local j, err = jwt.new(token)
    if err ~= nil then
-      stash.bearer = { error = 'invalid_token' }
+      stash.bearer = { error = 'invalid_token',
+                       error_description = 'Token parse error' }
       pound.log(pound.ERR, "bad token: " .. err)
       return false
    end
 
    if j.header.kid == nil then
-      stash.bearer = { error = 'invalid_token' }
+      stash.bearer = { error = 'invalid_token',
+                       error_description = 'No "kid" in token' }
       pound.log(pound.ERR, "bad token: kid not supplied")
       return false
    end
@@ -72,7 +95,8 @@ function _M.authorized()
    end
 
    if not j.verified then
-      stash.bearer = { error = 'invalid_token' }
+      stash.bearer = { error = 'invalid_token',
+                       error_description = 'Token verification failure' }
       return false
    end
 
@@ -90,15 +114,24 @@ function _M.authorized()
    end
 
    stash.bearer = { jwt = j }
-   
+
    return true
 end
 
+-- Verify if the given service is authorized to use by the JWT obtained
+-- earlier by the authorized method.
+--
+-- Sample usage:
+--
+--    LuaMatch "bearer.check_service" "ID"
 function _M.check_service(service)
    return stash.bearer.jwt ~= nil and
-      stash.bearer.jwt.payload.cameraAddress == service
+      stash.bearer.jwt.payload.cameraId == service
 end
 
+-- A primitive backend returning 401 if the authorized method failed.
+-- Usage:
+--    LuaBackend "bearer.verbose_notauth"
 function _M.verbose_notauth()
    http.resp.code = 401
    http.resp.reason = stash.bearer.error

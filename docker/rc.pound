@@ -15,4 +15,4 @@ portwait() {
 }
 
 portwait ${REDIS_HOST:-redis} ${REDIS_PORT:-6379}
-/usr/sbin/pound -F "$@"
+exec /usr/sbin/pound -F "$@"

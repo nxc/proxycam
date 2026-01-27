@@ -1,3 +1,10 @@
+-- Functions to store and retrieve digest objects from the external
+-- sorage (currently, redis).
+--
+-- This module must be loaded to the global Lua state:
+--
+--   LoadGlobal "lua/digest-store.lua"
+--
 local storage = require 'digest-redis'
 
 local function key(id, host, url)

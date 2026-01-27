@@ -17,21 +17,13 @@ function M.inject(base_url)
    if digest then
       auth_digest.cast(digest)
 --      pound.log(pound.INFO, "Digest="..pound.dump(digest))
-      http.req.headers['Authorization'] =
+      http.req.headers['Authorization'] = {
 	 digest:create_header(http.req.url, http.req.method)
+      }
    end
 end
 
 local sockhttp = require "socket.http"
-local sockurl = require "socket.url"
-local ltn12 = require "ltn12"
-
-local function hdrdup(t)
-    local r = {}
-    for k, v in pairs(t) do r[k] = v end
-    return r
-end
-
 local http_reason = {
    [100] = "Continue",
    [101] = "Switching Protocols",
@@ -57,8 +49,7 @@ local http_reason = {
    [308] = "Permanent Redirect",
 }
 
-function M.reauth(base_url)
-   local host, username, password = normalize_url(base_url)
+function M.reauth(base_url)   
    if http.resp.code ~= 401 then
       return
    end
@@ -66,6 +57,9 @@ function M.reauth(base_url)
       pound.log(pound.INFO, "ignoring 401 without www-authenticate")
       return
    end
+
+   local host, username, password = normalize_url(base_url)
+   
    digest, utab, err = auth_digest.redo(username, password,
 				        http.resp.headers["www-authenticate"])
    if not digest then
@@ -73,35 +67,13 @@ function M.reauth(base_url)
       return
    end
 
-   local headers = hdrdup(http.req.headers)
-   headers['Authorization'] = digest:create_header(http.req.url, http.req.method)
+   pound.gcall("digest_store", "id", host, utab, digest)	
    
-   local source
-   if #http.req.body > 0 then
-      -- FIXME: That won't work for chunked.
-      source = ltn12.source.string(http.req.body)
-   end
-   
-   local content = {}
-   local params = {
-	 method = http.req.method,
-	 url = host .. http.req.url,
-	 headers = headers,
-	 sink = ltn12.sink.table(content),
-	 source = source
+   http.resp.headers['Authorization'] = {
+      digest:create_header(http.req.url, http.req.method)
    }
-   
-   local _, c, h = sockhttp.request(params)
-
-   if c ~= nil and type(c) == 'number' and c < 400 then
-      -- save the digest
-      pound.gcall("digest_store", "id", host, utab, digest)
-      
-      http.resp.code = c
-      http.resp.reason = http_reason[c]
-      http.resp.headers = h
-      http.resp.body = table.concat(content)
-   end
+   http.resend = true
+   return
 end
 
 return M

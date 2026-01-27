@@ -1,3 +1,4 @@
+-- Redis storage for proxycam data.
 local M = {}
 local redis = require 'redis'
 
@@ -17,7 +18,7 @@ function M.retrieve(key)
 	 else
 	    pound.log(pound.INFO, "retrieving key "..key..": "..tostring(result))
 	 end
-      else	 
+      else
 	 pound.log(pound.INFO, "retrieving key "..key..": "..tostring(err))
       end
       return digest
@@ -39,7 +40,3 @@ function M.delete(key)
 end
 
 return M
-
-      
-
-	 
