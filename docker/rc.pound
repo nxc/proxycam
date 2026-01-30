@@ -5,6 +5,7 @@ portwait() {
     for i in $(seq 1 ${WAIT_TIMEOUT:-60})
     do
 	if nc -z $1 $2 2>/dev/null; then
+	    echo "OK $1:$2"
 	    return 0
 	fi
 	sleep ${WAIT_SLEEP:-1}
@@ -15,4 +16,13 @@ portwait() {
 }
 
 portwait ${REDIS_HOST:-redis} ${REDIS_PORT:-6379}
+
+if [ -n "find /var/newconfig -mindepth 1 -maxdepth 1 -name '*.spec'" ]; then
+    /etc/pound/buildconf/rebuild.sh -n /var/newconfig/*.spec
+fi
+
+if ! [ "$(ls -A /etc/pound/conf.d)" ]; then
+    echo "# placeholder" > /etc/pound/conf.d/_dummy.conf
+fi
+
 exec /usr/sbin/pound -F "$@"

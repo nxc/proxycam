@@ -1,9 +1,5 @@
 FROM graygnuorg/pies:2.26-debian
 RUN apt-get -qq update && apt-get -qq install curl gnupg2
-RUN . /etc/os-release ; \
-   mkdir -p --mode=0755 /usr/share/keyrings && \
-   curl -sSL -o /usr/share/keyrings/tailscale-archive-keyring.gpg https://pkgs.tailscale.com/stable/debian/$VERSION_CODENAME.noarmor.gpg && \
-   curl -sSL -o /etc/apt/sources.list.d/tailscale.list https://pkgs.tailscale.com/stable/debian/$VERSION_CODENAME.tailscale-keyring.list
 RUN gpg --keyserver keyserver.ubuntu.com \
         --recv-keys 79FFD94BFCE230B1 && \
     gpg --output=/etc/apt/keyrings/norsedigital.gpg --export 79FFD94BFCE230B1
@@ -15,18 +11,20 @@ RUN . /etc/os-release ; \
 #    luarocks. Hence, lua5.3 has to be used.
 # 2. There is no lua-md5 module for 5.3, hence it is installed from rocks.
 # 3. luaossl for 5.3 is botched, so openssl is installed from rocks.
-ARG BUILD_DEPS=libssl-dev
+ARG BUILD_DEPS=libssl-dev vim procps
 RUN apt-get -qq update && \
     apt-get -qq install \
-      tailscale tailscale-archive-keyring pound \
+      pound m4 bind9-dnsutils direvent rsync liblockfile-bin \
       netcat-traditional liblua5.3-dev\
       luarocks lua-socket lua-dkjson lua-redis \
       ${BUILD_DEPS}
 RUN luarocks --lua-version=5.3 install base64
 RUN luarocks --lua-version=5.3 install md5
 RUN luarocks --lua-version=5.3 install openssl
+COPY direvent.conf /etc
 COPY pies/*.conf /pies/conf.d/
 COPY pound /etc
+RUN mkdir /etc/pound/conf.d
 COPY rc.pound /etc/
 RUN chmod +x /etc/rc.pound
  

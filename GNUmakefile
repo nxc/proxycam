@@ -10,7 +10,7 @@ ifneq (,$(wildcard .env))
   command += --env-file .env
 endif
 ifneq ($(TERM),xterm)
-  command += --ansi=never
+  command += --ansi=never --progress=plain
 endif
 
 F=
