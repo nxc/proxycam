@@ -3,11 +3,22 @@ export DOCKER_BUILDKIT := 0
 PROJECT = proxycam
 command = docker compose -p $(PROJECT) \
      -f docker-compose.yml
-ifneq (,$(wildcard docker-compose.override.yml))
-  command += -f docker-compose.override.yml
-endif
 ifneq (,$(wildcard .env))
   command += --env-file .env
+  include .env
+endif
+ifneq (,$(PIES_SYSLOG_SERVER))
+  command += -f syslog.yml
+  ifeq (,$(SYSLOG_SOCKET))
+    export SYSLOG_SOCKET = udp://$(PIES_SYSLOG_SERVER)
+  endif
+else
+ ifneq (,$(SYSLOG_SOCKET)$(SYSLOG_FACILITY))
+   command += -f syslog.yml
+ endif
+endif
+ifneq (,$(wildcard docker-compose.override.yml))
+  command += -f docker-compose.override.yml
 endif
 ifneq ($(TERM),xterm)
   command += --ansi=never --progress=plain

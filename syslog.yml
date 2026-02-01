@@ -1,0 +1,42 @@
+# Additional docker compose configuration to enable syslog logging.
+# This file is used whenever the user defines at least one of the following
+# variables in his .env file:
+#
+#   PIES_SYSLOG_SERVER=IPADDR
+#          IP address of the syslog server. Defining this variable
+#          alone is enough to configure both containers and all programs
+#          in the proxycam container to send their logs to syslog.
+#
+#   SYSLOG_SOCKET=URL
+#          When set, diverts container logs to the given syslog URL.
+#          Setting this variable alone does not affect logging setup for
+#          programs in the proxycam container. These continue to log to
+#          stdout/stderr, their output will be picked up by the docker
+#          driver and sent to syslog along with the rest of output. Comparing
+#          to using PIES_SYSLOG_SERVER, this has a drawback that messages
+#          from specific programs will not be tagged with their names and pids.
+#          Therefore, setting PIES_SYSLOG_SERVER is recommended.
+#
+#          When both variables are initialized, SYSLOG_SOCKET controls
+#          container logs, and PIES_SYSLOG_SERVER those of utilities in
+#          proxycam.
+#
+#   SYSLOG_FACILITY=NAME
+#          Defines syslog facility to use for container logs, instead of
+#          the default 'local0'.
+# 
+x-logging:
+  &default-logging
+  driver: "syslog"
+  options:
+    syslog-address: ${SYSLOG_SOCKET:-unixgram:///dev/log}
+    syslog-facility: ${SYSLOG_FACILITY:-local0}
+    tag: 'proxycam'
+
+services:
+  proxycam:
+     environment:
+        PIES_SYSLOG_SERVER: ${PIES_SYSLOG_SERVER:-}
+     logging: *default-logging
+  redis:
+     logging: *default-logging

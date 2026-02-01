@@ -14,7 +14,6 @@ services:
     volumes:
       - "newconfig:/var/newconfig"
     environment:
-      PIES_SYSLOG_SERVER: $PIES_SYSLOG_SERVER
       JWKS_JSON:          $JWKS_JSON
     restart: unless-stopped
   redis:
