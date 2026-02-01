@@ -11,7 +11,7 @@ RUN . /etc/os-release ; \
 #    luarocks. Hence, lua5.3 has to be used.
 # 2. There is no lua-md5 module for 5.3, hence it is installed from rocks.
 # 3. luaossl for 5.3 is botched, so openssl is installed from rocks.
-ARG BUILD_DEPS=libssl-dev vim procps
+ARG BUILD_DEPS="libssl-dev vim procps"
 RUN apt-get -qq update && \
     apt-get -qq install \
       pound m4 bind9-dnsutils direvent rsync liblockfile-bin \

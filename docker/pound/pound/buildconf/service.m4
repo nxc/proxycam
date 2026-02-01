@@ -15,7 +15,7 @@ pushdef(`PORT',`ifelse($4,,dnl
 ifelse(p,HOST,`ifelse(SCHEME,`https',443,80)',p)dnl
 popdef(`p')',$4)')
 divert(0)dnl
-	Service
+	Service "camera:$1"
 		LuaMatch "bearer.check_service" "$1"
 		Rewrite request
 			LuaModify "authinject.inject" "$2"

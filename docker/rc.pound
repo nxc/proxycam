@@ -17,7 +17,7 @@ portwait() {
 
 portwait ${REDIS_HOST:-redis} ${REDIS_PORT:-6379}
 
-if [ -n "find /var/newconfig -mindepth 1 -maxdepth 1 -name '*.spec'" ]; then
+if [ -n "$(find /var/newconfig -mindepth 1 -maxdepth 1 -name '*.spec')" ]; then
     /etc/pound/buildconf/rebuild.sh -n /var/newconfig/*.spec
 fi
 
