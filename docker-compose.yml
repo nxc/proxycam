@@ -10,7 +10,7 @@ services:
     build:
       context: docker
     ports:
-      - "127.0.0.1:${PROXYCAM_PORT:-9090}:80"
+      - "${PROXYCAM_PORT:-127.0.0.1:9090}:80"
     volumes:
       - "newconfig:/var/newconfig"
     environment:

@@ -77,6 +77,9 @@ if [ $# -eq 0 ]; then
 	if dotlockfile -p -r 0 $pidfile; then
 	    sleep $timeout
 	    filelist=*.spec
+	    if [ "$filelist" = '*.spec' ]; then
+		filelist=
+	    fi
 	else
 	    [ $verbose -gt 0 ] && echo >&2 "$0: another process already running"
 	    exit 0
