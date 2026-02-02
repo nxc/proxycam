@@ -1,8 +1,7 @@
 export DOCKER_BUILDKIT := 0
 
 PROJECT = proxycam
-command = docker compose -p $(PROJECT) \
-     -f docker-compose.yml
+command = docker compose -p $(PROJECT) -f docker-compose.yml
 ifneq (,$(wildcard .env))
   command += --env-file .env
   include .env
