@@ -11,8 +11,18 @@ local function normalize_url(host)
    return sockurl.build(url), username, password
 end
 
+local function get_id()
+   local ok,sig = pcall(function () return stash.bearer.jwt.raw.signature end)
+   if ok then
+      return sig
+   else
+      return tostring(pound.tid)
+   end
+end
+
 function M.inject(base_url)
-   local digest = pound.gcall("digest_retrieve", "id", normalize_url(base_url),
+   local digest = pound.gcall("digest_retrieve", get_id(),
+			      normalize_url(base_url),
 			      http.req.path)
    if digest then
       auth_digest.cast(digest)
@@ -67,7 +77,7 @@ function M.reauth(base_url)
       return
    end
 
-   pound.gcall("digest_store", "id", host, utab, digest)	
+   pound.gcall("digest_store", get_id(), host, utab, digest)
    
    http.resp.headers['Authorization'] = {
       digest:create_header(http.req.url, http.req.method)
