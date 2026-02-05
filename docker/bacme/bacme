@@ -10,6 +10,9 @@
 # Copyright (c) 2020 Stephan Uhlmann <su@su2.info>
 # Licensed under the GPL version 3, see LICENSE.txt
 #
+# 2026-02-05 Sergey Poznyakoff:
+#   Fix order completion.
+#   Implement -m and -t options.
 ##############################################################################
 
 
