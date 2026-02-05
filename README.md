@@ -20,9 +20,9 @@ This document discusses in detail how to install and maintain __proxycam__.
 
 The solution consists of two containers: a proxy itself and a Redis database
 whose purpose is to keep session information. A docker composer framework is
-provided that allows the user to start both with minimal effort. The solution
-deliberately does not provide https access: it is supposed to be installed
-behind a reverse proxy that handles https.
+provided that allows the user to get the system running with minimal effort.
+The solution can be used both as a standalone server accessible via HTTPS, or
+behind a proxy.
 
 To start the __proxycam__ system, you will need the following software:
 
@@ -51,13 +51,13 @@ docker-compose.yml
 syslog.yml
 ```
 
-Now, create the file `.env`, which will contain definitions of several
-configuration variables.  First, you will need the `JWKS_JSON` variable,
-which declares the URL from which the RSA public key for verifying JWT
-tokens can be retrieved.  It's default value is:
+To begin with, run `make`. This will build the container images that the
+system is going to use.
 
-*[Editorial: not sure if it is OK to mention here. Perhaps it would be
-better to change the wording.  To proof-readers: ask developers for the exact location]*
+Now, create the file `.env`, which will contain definitions of several
+configuration variables.  First, you will need `JWKS_JSON` variable,
+which declares the URL from which the RSA public key for verifying JWT
+tokens can be retrieved.
 
 Another setting required prior to starting the system up, provides a
 mapping to the directory on the hosting file system where the
@@ -71,14 +71,24 @@ your `.env` will contain the following:
 NEWCONFIG_DIRECTORY=/usr/local/etc/proxycam
 ```
 
-Notice, that during startup the system will try to create that directory.
-That means it should have sufficient privileges on the parent directory. If
-it is not the case, create that directory as root and change its ownership to
-the user that will be used to launch __proxycam__ system, prior to proceeding
-further.
+The directory will be created, if it doesn't exist already.
 
 Alternatively, you may create the `newconfig` volume using docker compose,
 as covered in the [Configuration](#user-content-Configuration) section below.
+
+If you plan to make __proxycam__ available via HTTPS, add the following
+settings:
+
+```
+PROXYCAM_HTTP_PORT=80
+PROXYCAM_HTTPS_PORT=443
+PROXYCAM_TLS=DOMAIN
+```
+
+The purpose of the first two is obvious. The last one defines the domain name
+under which the system will be known and for which TLS certificate will be
+maintained. Refer to [TLS Setup](#user-content-tls-setup), for a detailed
+discussion of these and related settings.
 
 Logging is yet another thing to take care of prior to starting is . By default,
 both containers will use the standard docker driver. The configuration provides
@@ -100,9 +110,6 @@ When everything is ready, type
 make up
 ```
 
-The first startup implies building the container images, so you will
-have to wait a bit.  Further runs will be much faster.
-
 Once the system is up, examine its status by running `make ps`. If everything
 worked right, you will see the following output:
 
@@ -113,10 +120,6 @@ proxycam-redis-1      redis:8.4.0         "docker-entrypoint.s|"   redis      4 
 ```
 
 (depending on your setup, some minor details may differ).
-
-By default, the proxy interface is bound to port 9090 on the localhost
-interface of the host server. You can redefine it using the `PROXYCAM_PORT`
-variable.
 
 Let's inspect the logs of the proxy:
 
@@ -214,6 +217,30 @@ The parts of the listing for each camera are:
 Similarly, to change camera settings or to remove it, just open that file,
 edit it to your liking and save your changes.
 
+## TLS Setup
+
+To start the system as a standalone server and make it available via HTTPS,
+the following settings should be added to the `.env` file:
+
+```
+PROXYCAM_HTTP_PORT=80
+PROXYCAM_HTTPS_PORT=443
+PROXYCAM_TLS=DOMAIN [DOMAIN...]
+```
+
+The first two define the ports to bind to. The `PROXYCAM_TLS` setting
+declares one or more domain names, under which this system is to be known.
+After startup, __proxycam__ will contact *LetsEncrypt* to issue certificates
+for each domain name listed in `PROXYCAM_TLS`. The certificates will be
+maintained, by re-issuing them in due time: the maintenance script will wake
+up two days prior to expiry of the certificate.
+
+In order to make sure that restarting the containers won't trigger certificate
+re-issuing, they are kept on the host machine, in docker volume named
+`proxycam_crt`. If you wish, you can instruct __proxycam__ to use a
+local directory of your choice for that purpose. To do so, define the
+variable `CRT_DIRECTORY` to the absolute pathname of that directory.
+
 ## Make Commands
 
 In previous sections we have introduced a couple of most often used management
@@ -274,10 +301,27 @@ of __proxycam__:
   to configure both containers and all programs in the proxycam container
   to send their logs to a remote syslog server.
 
-* `PROXYCAM_PORT=`[*IP*:]*PORT*
+* `PROXYCAM_HTTP_PORT=`[*IP*:]*PORT*
 
-  IP address and port number on which the proxy container will be available.
-  Default is `127.0.0.1:9090`.
+  IP address and port number on which the proxy container will listen for
+  plain HTTP requests. The default is `127.0.0.1:9080`.
+
+* `PROXYCAM_HTTPS_PORT=`[*IP*:]*PORT*
+
+  IP address and port number on which the proxy container will listen for
+  HTTPS requests. The default is `127.0.0.1:9443`.
+
+* `PROXYCAM_TLS=`*DOMAIN* [*DOMAIN*...]
+
+  A domain name (or a whitespace-delimited list of domain names), under which
+  the system will be available via HTTPS. Certificates for each domain name
+  will be issued via *LetsEncrypt*.
+
+* `PROXYCAM_ACME_TEST`=*BOOL*
+
+  If set to `true`, `yes`, `on`, or `1`, this variable instructs __proxycam__
+  to use *LetsEncrypt* stage server for maintaining certificates. This is
+  for debugging. Don't use it on production.
 
 * `SYSLOG_SOCKET=`*URL*
 

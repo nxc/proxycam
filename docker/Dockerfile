@@ -26,9 +26,9 @@ COPY pies/*.conf /pies/conf.d/
 COPY pound /etc
 RUN mkdir -p /etc/rc.d /etc/pound/conf.d \
 	     /var/lib/pound/.well-known/acme-challenge \
-	     /etc/ssl/acme/crt /etc/ssl/acme/bacme
+	     /proxycam
 COPY rc.d/rc.* /etc/rc.d/
-COPY bacme /etc/ssl/acme/bacme
-COPY certupdate /etc/ssl/acme/
+COPY bacme /proxycam
+COPY certupdate /proxycam
 COPY certupdate.crontab /etc/cron.d/certupdate
-VOLUME [ "/etc/ssl/acme/crt" ]
+VOLUME [ "/etc/ssl/acme" ]

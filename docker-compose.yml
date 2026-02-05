@@ -4,7 +4,7 @@ x-healthcheck:
   interval: 30s
   timeout: 15s
   retries: 5
-  
+
 services:
   proxycam:
     build:
@@ -14,6 +14,7 @@ services:
       - "${PROXYCAM_HTTPS_PORT:-127.0.0.1:9443}:443"
     volumes:
       - "newconfig:/var/newconfig"
+      - "crt:/etc/ssl/acme"
     environment:
       JWKS_JSON:          $JWKS_JSON
       PROXYCAM_TLS:	  ${PROXYCAM_TLS:-}
@@ -25,5 +26,4 @@ services:
 
 volumes:
   newconfig:
-
-    
+  crt:

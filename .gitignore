@@ -3,5 +3,6 @@
 *~
 /docker-compose.override.yml
 /newconfig.yml
+/crtdir.yml
 /tmp
 /storage

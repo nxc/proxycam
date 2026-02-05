@@ -12,7 +12,7 @@
 #
 # 2026-02-05 Sergey Poznyakoff:
 #   Fix order completion.
-#   Implement -m and -t options.
+#   Implement -C, -m and -t options.
 ##############################################################################
 
 
@@ -36,6 +36,7 @@ usage()
 
 Usage: bacme [options...] <domain> [ <domain> ... ]
 Options:
+  -C, --chdir DIR           Change to DIR
   -e, --email EMAIL         Your email if you want that Let's Encrypt can contact you
   -h, --help                This help
   -m, --mono                Create a single file with certificate and key
@@ -196,6 +197,10 @@ while [ ${#} -gt 0 ];
 do
 	ARG="${1}"
 	case "${ARG}" in
+	        -C|--chdir)
+			shift
+			cd $1 || exit 1
+			;;
 		-e|--email)
 			shift
 			CONTACT_EMAIL="${1}"

@@ -38,6 +38,7 @@ cmpaltnames() {
 if [ ! -f $certdir/$1.pem ] || \
        ! openssl x509 -in $certdir/$1.pem -checkend $delta || \
        ! cmpaltnames; then
-    /etc/ssl/acme/bacme/bacme -m -o $certdir $T -w /var/lib/pound "$@" && \
+    /proxycam/bacme -C /etc/ssl/acme -m -o $certdir $T \
+		    -w /var/lib/pound "$@" && \
 	piesctl restart component pound
 fi

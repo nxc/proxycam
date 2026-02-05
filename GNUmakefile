@@ -22,6 +22,13 @@ ifneq (,$(NEWCONFIG_DIRECTORY))
 else
   NEWCONFIG_YML=
 endif
+ifneq (,$(PROXYCAM_TLS))
+  CRTDIR_YML=
+  ifneq (,$(CRT_DIRECTORY))
+    CRTDIR_YML += crtdir.yml
+    command += -f crtdir.yml
+  endif
+endif
 ifneq (,$(wildcard docker-compose.override.yml))
   command += -f docker-compose.override.yml
 endif
@@ -37,12 +44,19 @@ $(1): $(NEWCONFIG_YML)
 	$$(command) $(1) $$($(strip $(1))_FLAGS)$(if $(F), $(F))
 endef
 
+define localvolume =
+$(1): .env
+	@mkdir -p $(2)
+	@echo "volumes:;  newconfig:;    driver: local;    driver_opts:;      type: none;      o: bind;      device: \"$(1)\";" | tr ';' '\n' > $(2)
+endef
+
 all: build
 
-ifneq (,$(NEWCONFIG_DIRECTORY))
-newconfig.yml: .env
-	@mkdir -p $(NEWCONFIG_DIRECTORY)
-	@echo "volumes:;  newconfig:;    driver: local;    driver_opts:;      type: none;      o: bind;      device: \"$(NEWCONFIG_DIRECTORY)\";" | tr ';' '\n' > newconfig.yml
+ifneq (,$(NEWCONFIG_YML))
+$(eval $(call localvolume,$(NEWCONFIG_YML),$(NEWCONFIG_DIRECTORY)))
+endif
+ifneq (,$(CRTDIR_YML))
+$(eval $(call localvolume,$(CRTDIR_YML),$(CRT_DIRECTORY)))
 endif
 
 proxylog:

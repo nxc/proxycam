@@ -1,8 +1,10 @@
 #!/bin/sh
 
+certdir=/etc/ssl/acme/crt
+mkdir -p $certdir
 xenv -o/etc/pound/pound.cfg /etc/pound/pound.cfg.xenv
 if [ -n "$PROXYCAM_TLS" ] &&
-   [ -z "$(find /etc/ssl/acme/crt/ -mindepth 1 -maxdepth 1 -name '*.pem')" ]
+   [ -z "$(find $certdir -mindepth 1 -maxdepth 1 -name '*.pem')" ]
 then
     # Generate self-signed certificate for bootstrapping
     ( cd /tmp
@@ -11,7 +13,7 @@ then
 	      -nodes -keyout _dummy.key.pem -x509 \
 	      -days 365 -out _dummy.crt.pem
       cat _dummy.crt.pem _dummy.key.pem
-      rm _dummy.crt.pem _dummy.key.pem ) > /etc/ssl/acme/crt/_dummy.pem
+      rm _dummy.crt.pem _dummy.key.pem ) > $certdir/_dummy.pem
 fi
 
 if [ -n "$(find /var/newconfig -mindepth 1 -maxdepth 1 -name '*.spec')" ]; then
