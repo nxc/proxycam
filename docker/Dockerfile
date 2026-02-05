@@ -14,7 +14,7 @@ RUN . /etc/os-release ; \
 ARG BUILD_DEPS="libssl-dev vim procps"
 RUN apt-get -qq update && \
     apt-get -qq install \
-      pound m4 bind9-dnsutils direvent rsync liblockfile-bin \
+      pound m4 micron bind9-dnsutils direvent rsync xxd liblockfile-bin \
       netcat-traditional liblua5.3-dev\
       luarocks lua-socket lua-dkjson lua-redis \
       ${BUILD_DEPS}
@@ -24,7 +24,11 @@ RUN luarocks --lua-version=5.3 install openssl
 COPY direvent.conf /etc
 COPY pies/*.conf /pies/conf.d/
 COPY pound /etc
-RUN mkdir /etc/pound/conf.d
-COPY rc.pound /etc/
-RUN chmod +x /etc/rc.pound
- 
+RUN mkdir -p /etc/rc.d /etc/pound/conf.d \
+	     /var/lib/pound/.well-known/acme-challenge \
+	     /etc/ssl/acme/crt /etc/ssl/acme/bacme
+COPY rc.d/rc.* /etc/rc.d/
+COPY bacme /etc/ssl/acme/bacme
+COPY certupdate /etc/ssl/acme/
+COPY certupdate.crontab /etc/cron.d/certupdate
+VOLUME [ "/etc/ssl/acme/crt" ]

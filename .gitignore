@@ -2,5 +2,6 @@
 .emacs*
 *~
 /docker-compose.override.yml
+/newconfig.yml
 /tmp
 /storage

@@ -76,10 +76,7 @@ if [ $# -eq 0 ]; then
     if [ -n "$DIREVENT_FILE" ]; then
 	if dotlockfile -p -r 0 $pidfile; then
 	    sleep $timeout
-	    filelist=*.spec
-	    if [ "$filelist" = '*.spec' ]; then
-		filelist=
-	    fi
+	    filelist=$(find . -mindepth 1 -maxdepth 1 -type f -name '*.spec')
 	else
 	    [ $verbose -gt 0 ] && echo >&2 "$0: another process already running"
 	    exit 0

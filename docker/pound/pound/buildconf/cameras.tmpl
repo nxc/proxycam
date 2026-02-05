@@ -1,21 +1,15 @@
 {{define "default" -}}
 Configured cameras:
-{{range $lno,$lstn = .listeners -}}
-  {{block "prtplain" $lstn -}}
-   {{if .name}}{{if eq .name "plain" -}}
-   {{range $sno,$svc = .services -}}
-    {{block "prtsvc" $svc -}}
-     {{if .name -}}
-      {{range $bno,$be = .backends -}}
-       {{if eq $be.type "backend" -}}
+{{range $sno,$svc = .services -}}
+  {{block "prtsvc" $svc -}}
+   {{if .name -}}
+    {{range $bno,$be = .backends -}}
+     {{if eq $be.type "backend" -}}
 "{{.name}}" {{if .enabled}}active{{else}}disabled{{end}} {{$be.protocol}} {{$be.address}} {{if $be.alive}}alive{{else}}dead{{end}}
 {{end}}{{ /* if, unindented to avoid extra leading whitespace */}}
-      {{- end}}
-     {{- end}}
     {{- end}}
    {{- end}}
-  {{- end}}{{end}}
-{{- end}}
+  {{- end}}
 {{- end}}
 End of list
 {{end -}}

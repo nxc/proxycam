@@ -1,0 +1,36 @@
+#! /bin/sh
+delta=${1-259200}
+certdir=/etc/ssl/acme/crt
+set -- $PROXYCAM_TLS
+if [ $# -eq 0 ]; then
+    exit 0
+fi
+
+listaltnames() {
+    openssl x509 -noout -text -in $certdir/$1.pem |
+	grep DNS: |
+	tr -d ' ' |
+	sed s/DNS://g|tr ',' '\n'|
+	sort
+}
+
+temp=/tmp/$(basename $0).$$
+cleanup() {
+    rm -r $temp
+}
+trap 'cleanup' 1 2 3 13 15
+
+cmpaltnames() {
+    local 
+    set -- $PROXYCAM_TLS
+    echo "$@" | tr ' ' '\n' | sort -u > $temp
+    listaltnames $1 | cmp $temp - >&2
+}
+
+if [ ! -f $certdir/$1.pem ] || \
+       ! openssl x509 -in $certdir/$1.pem -checkend $delta || \
+       ! cmpaltnames; then
+    /etc/ssl/acme/bacme/bacme -m -o $certdir -t -w /var/lib/pound "$@" && \
+	piesctl restart component pound
+fi
+

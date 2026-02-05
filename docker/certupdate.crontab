@@ -1,0 +1,3 @@
+_MICRON_SYSLOG_FACILITY = cron
+@reboot		root	/etc/ssl/acme/certupdate
+0 * * * *	root	/etc/ssl/acme/certupdate
