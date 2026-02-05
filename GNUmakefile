@@ -47,7 +47,7 @@ endef
 define localvolume =
 $(1): .env
 	@mkdir -p $(2)
-	@echo "volumes:;  newconfig:;    driver: local;    driver_opts:;      type: none;      o: bind;      device: \"$(1)\";" | tr ';' '\n' > $(2)
+	@echo "volumes:;  newconfig:;    driver: local;    driver_opts:;      type: none;      o: bind;      device: \"$(2)\";" | tr ';' '\n' > $(1)
 endef
 
 all: build
