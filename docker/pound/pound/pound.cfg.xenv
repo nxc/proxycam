@@ -10,12 +10,16 @@ Lua
 	LoadGlobal "/etc/pound/lua/digest-store.lua"
 	Load "/etc/pound/lua/bearer.lua"
 	Load "/etc/pound/lua/authinject.lua"
-	Load "/etc/pound/lua/cors.lua"
 End
 
 Service "options"
-	LuaMatch "cors.IsOptions"
-	LuaBackend "cors.BackEnd"
+	Method "OPTIONS"
+	Rewrite response
+		SetHeader "Access-Control-Allow-Origin: *"
+		SetHeader "Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS"
+		SetHeader "Access-Control-Max-Age: 3600"
+		SetHeader "Access-Control-Allow-Headers: *"
+	End
 End
 	
 Service
