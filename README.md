@@ -36,11 +36,8 @@ To start the __proxycam__ system, you will need the following software:
 First, clone the repository:
 
 ```shell
-git clone git@gitlab.norse.digital:sep/proxycam.git
+git clone git@github.com:nxc/proxycam.git
 ```
-
-*[Editorial: For the moment, the URL is to my private workspace. It will
-be changed when published.]*
 
 After cloning, you will get the directory with the following content:
 
