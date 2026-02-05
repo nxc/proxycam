@@ -6,6 +6,14 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
+case "$PROXYCAM_ACME_TEST" in
+    1|true|yes|on)
+	T=-t
+	;;
+    *)
+	T=
+esac
+
 listaltnames() {
     openssl x509 -noout -text -in $certdir/$1.pem |
 	grep DNS: |
@@ -30,7 +38,6 @@ cmpaltnames() {
 if [ ! -f $certdir/$1.pem ] || \
        ! openssl x509 -in $certdir/$1.pem -checkend $delta || \
        ! cmpaltnames; then
-    /etc/ssl/acme/bacme/bacme -m -o $certdir -t -w /var/lib/pound "$@" && \
+    /etc/ssl/acme/bacme/bacme -m -o $certdir $T -w /var/lib/pound "$@" && \
 	piesctl restart component pound
 fi
-

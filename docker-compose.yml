@@ -17,6 +17,7 @@ services:
     environment:
       JWKS_JSON:          $JWKS_JSON
       PROXYCAM_TLS:	  ${PROXYCAM_TLS:-}
+      PROXYCAM_ACME_TEST: ${PROXYCAM_ACME_TEST:-}
     restart: unless-stopped
   redis:
     image: redis:8.4.0
