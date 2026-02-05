@@ -20,6 +20,7 @@ Service "options"
 		SetHeader "Access-Control-Max-Age: 3600"
 		SetHeader "Access-Control-Allow-Headers: *"
 	End
+	Success
 End
 	
 Service
