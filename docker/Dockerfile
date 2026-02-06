@@ -1,4 +1,4 @@
-FROM graygnuorg/pies:2.27-debian
+FROM graygnuorg/pies:2.30-debian
 RUN apt-get -qq update && apt-get -qq install curl gnupg2
 RUN gpg --keyserver keyserver.ubuntu.com \
         --recv-keys 79FFD94BFCE230B1 && \
