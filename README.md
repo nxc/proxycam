@@ -87,11 +87,11 @@ under which the system will be known and for which TLS certificate will be
 maintained. Refer to [TLS Setup](#user-content-tls-setup), for a detailed
 discussion of these and related settings.
 
-Logging is yet another thing to take care of prior to starting is . By default,
-both containers will use the standard docker driver. The configuration provides
-an easy way to send the logs to your `syslog` server, if you prefer so. First,
-ensure your `syslog` is listening on port 514 [(1)](#user-content-syslog), then
-initialize the variable `PIES_SYSLOG_SERVER'`in your `.env` file to the IP
+Logging is yet another thing to take care of prior to starting the system. By 
+default, both containers will use the standard docker driver. The 
+configuration provides an easy way to send the logs to your `syslog` server, 
+if you prefer so. First, ensure your `syslog` is listening on port 
+514 [(1)](#user-content-syslog), then initialize the variable `PIES_SYSLOG_SERVER'`in your `.env` file to the IP
 address it is listening on. See [Environment](#user-content-environment) for
 more information on this and related settings.
 
