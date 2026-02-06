@@ -21,6 +21,7 @@ RUN apt-get -qq update && \
 RUN luarocks --lua-version=5.3 install base64
 RUN luarocks --lua-version=5.3 install md5
 RUN luarocks --lua-version=5.3 install openssl
+RUN luarocks --lua-version=5.3 install lua-glob-pattern
 COPY direvent.conf /etc
 COPY pies/*.conf /pies/conf.d/
 COPY pound /etc

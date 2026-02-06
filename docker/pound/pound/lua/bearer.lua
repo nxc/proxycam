@@ -61,18 +61,25 @@ local jwt = require 'jwt'
 --        Error 401
 --    End
 function _M.authorized()
+   local token
+
    local bh = http.req.headers['Authorization']
-   if bh == nil then
+   if bh ~= nil then
+      local n
+      token, n = bh:gsub("^%s*[bB][eE][aA][rR][eE][rR]*%s+([A-Za-z0-9_-]+[.][A-Za-z0-9_-]+[.][A-Za-z0-9_-]+)$", "%1")
+      if n == 0 then
+	 stash.bearer = { error = 'invalid_request', 
+			  error_description = 'Malformed token: ' .. bh }
+	 return false
+      end
+   elseif http.req.query['authtok'] ~= nil then
+      token = http.req.query['authtok']
+   else
       stash.bearer = { error = 'invalid_request', 
-                       error_description = 'No Authorization header' }
+                       error_description = 'No authorization token' }
       return false
    end
-   local token, n = bh:gsub("^%s*[bB][eE][aA][rR][eE][rR]*%s+([A-Za-z0-9_-]+[.][A-Za-z0-9_-]+[.][A-Za-z0-9_-]+)$", "%1")
-   if n == 0 then
-      stash.bearer = { error = 'invalid_request', 
-                       error_description = 'Malformed token: ' .. bh }
-      return false
-   end
+
    local j, err = jwt.new(token)
    if err ~= nil then
       stash.bearer = { error = 'invalid_token',
@@ -118,6 +125,8 @@ function _M.authorized()
    return true
 end
 
+local g2p = require 'globtopattern'
+
 -- Verify if the given service is authorized to use by the JWT obtained
 -- earlier by the authorized method.
 --
@@ -125,8 +134,21 @@ end
 --
 --    LuaMatch "bearer.check_service" "ID"
 function _M.check_service(service)
-   return stash.bearer.jwt ~= nil and
-      stash.bearer.jwt.payload.cameraId == service
+   local jwt = stash.bearer.jwt
+   if jwt ~= nil and jwt.payload.cameraId == service then
+      if jwt.allowedPaths ~= nil and type(jwt.allowedPaths) == 'table' then
+	 local path = http.req.path
+	 for _,pat in ipairs(jwt.allowedPaths) do
+	    if path:find(g2p.globtopattern(pat)) == 1 then
+	       return true
+	    end
+	 end
+      else
+	 return true
+      end
+   else
+      return nil
+   end
 end
 
 -- A primitive backend returning 401 if the authorized method failed.
