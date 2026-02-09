@@ -88,12 +88,9 @@ maintained. Refer to [TLS Setup](#user-content-tls-setup), for a detailed
 discussion of these and related settings.
 
 Logging is yet another thing to take care of prior to starting the system. By 
-default, both containers will use the standard docker driver. The 
-configuration provides an easy way to send the logs to your `syslog` server, 
-if you prefer so. First, ensure your `syslog` is listening on port 
-514 [(1)](#user-content-syslog), then initialize the variable `PIES_SYSLOG_SERVER'`in your `.env` file to the IP
-address it is listening on. See [Environment](#user-content-environment) for
-more information on this and related settings.
+default, both containers use the standard docker driver. You can easily change
+this to `syslog`, which is the recommended way of logging. Refer to the section
+[Syslog](#user-content-syslog) for detailed instructions.
 
 The last, optional step is to provide a list of accessible cameras in a
 file with `.spec` suffix in your `newconfig` directory. See [Camera
@@ -213,6 +210,80 @@ The parts of the listing for each camera are:
 
 Similarly, to change camera settings or to remove it, just open that file,
 edit it to your liking and save your changes.
+
+## Syslog
+
+The `file` logging driver, which `docker` uses by default, it hardly
+suitable for anyhting but small experimental projects, that produce scarce
+amounts of logging information. For production setup, you will need something
+more robust. `Syslog` provides a convenient alternative.
+
+This section assumes that you use `rsyslog`, which is the most widespread
+syslog implementation nowadays. The package includes the file
+`rsyslog/proxycam.conf`, with the necessary `rsyslog` settings.
+Copy that piece to your rsyslog configuration. In most ditributions, all you
+have to do is to copy that file to the `/etc/rsyslog.d` directory on the
+server you chose as your log receiver:
+
+```
+cp rsyslog/proxycam.conf /etc/rsyslog.d
+```
+
+That done, restart `rsyslogd`.
+
+Now, in your __proxycam__ `.env` file, define the variable `PIES_SYSLOG_SERVER`
+to the IP address of your syslog server. See [Environment](#user-content-environment) for more information on this and related settings.
+
+When you start __proxycam__, you'll see its logs properly arranged in the
+following files on the syslog server:
+
+* `/var/log/proxycam/proxycam.log`
+
+  Logs of the `proxycam` container. Unless something inexpected happens,
+  you'll see only startup and shutdown messages produced by the `pies`
+  program manager.
+
+* `/var/log/proxycam/redis.log`
+
+  Log messages produced by the redis server.
+
+* `/var/log/proxycam/service`
+
+  A directory which holds logs produced by particular *services* of the
+  project.
+
+* `/var/log/proxycam/service/certupdate.log`
+
+  Daily logs of the TLS certificate maintenance. These are produced only if
+  __proxycam__ is configured as a standalone server.  See [TLS Setup](#user-content-tls-setup) section, below.
+
+* `/var/log/proxycam/service/direvent.log`
+
+  Logs of the directory event monitoring service. This service is responsible
+  for reacting on changes in your [camera specification files](#user-content-camera-specification-file) and converting them to the proxy server configuration.
+
+* `/var/log/proxycam/service/init.log`
+
+  Logs produced by the server initialization routines. Normally empty.
+
+* `/var/log/proxycam/service/list.log`
+
+  Lists configured cameras. Inspect this file after you do some changes to
+  your camera specifications, to make sure they've been properly understood
+  by __proxycam__.
+
+* `/var/log/proxycam/service/micron.log`
+
+  Logs of the `cron` server.
+  
+* `/var/log/proxycam/service/pies.log`
+
+  Logs of the `pies` component manager.
+
+* `/var/log/proxycam/service/pound.log`
+
+  Logs of the `pound` proxy server.
+
 
 ## TLS Setup
 
@@ -348,20 +419,3 @@ supplied via environment variables in the `.env` file, as described above.
 If that is not enough, or if you prefer to configure everything manually,
 you can do so by creating the file named `docker-compose.override.yml` and
 placing your overrides there.
-
-## Notes
-
-### syslog
-
-Configuring your `syslog` for remote receiving is beyond the scope of this
-document. Just as a hint, for `rsyslog`, which seems to be the most commonly
-used implementation nowadays, it is done using the following two statements
-in its configuration file:
-
-```
-module(load="imudp")
-input(type="imudp" port="514")
-```
-
-Refer to your syslog documentation for more info.
-
