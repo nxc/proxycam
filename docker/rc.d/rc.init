@@ -11,7 +11,8 @@ then
       openssl req -batch -newkey rsa:4096 \
               -subj '/CN=example.org/' \
 	      -nodes -keyout _dummy.key.pem -x509 \
-	      -days 365 -out _dummy.crt.pem
+	      -days 365 -out _dummy.crt.pem 2>&1 | \
+	  grep -vE '^([.+*]*|-{5})$' >&2
       cat _dummy.crt.pem _dummy.key.pem
       rm _dummy.crt.pem _dummy.key.pem ) > $certdir/_dummy.pem
 fi
