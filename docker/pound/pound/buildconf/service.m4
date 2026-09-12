@@ -7,7 +7,7 @@ pushdef(`HOSTPART',`patsubst(HOST,`:.*$')')
 
 pushdef(`IP',`ifelse($3,,dnl
 `pushdef(`ip',`esyscmd(dig +short HOSTPART|tail -1|tr -d \\n)')dnl
-ifelse(ip,,HOSTPART,ip)dnl
+ifelse(ip,,HOSTPART,ip)`'dnl
 popdef(`ip')',$3)')
 
 pushdef(`PORT',`ifelse($4,,dnl

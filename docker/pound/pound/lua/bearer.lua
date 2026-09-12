@@ -146,9 +146,8 @@ function _M.check_service(service)
       else
 	 return true
       end
-   else
-      return nil
    end
+   return nil
 end
 
 -- A primitive backend returning 401 if the authorized method failed.

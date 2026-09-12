@@ -18,7 +18,7 @@ This document discusses in detail how to install and maintain __proxycam__.
 
 ## Overview
 
-The solution consists of two containers: a proxy itself and a Redis database
+The solution consists of two containers: the proxy itself and a Redis database
 whose purpose is to keep session information. A docker composer framework is
 provided that allows the user to get the system running with minimal effort.
 The solution can be used both as a standalone server accessible via HTTPS, or
@@ -58,7 +58,7 @@ tokens can be retrieved.
 
 Another setting required prior to starting the system up, provides a
 mapping to the directory on the hosting file system where the
-proxy will look for a list of cameras to use. To set it up, select the
+proxy will look for a list of cameras to use. To set it up, select a
 location suitable for the purpose, and define the variable
 `NEWCONFIG_DIRECTORY` to the selected pathname. For example, assuming you
 keep your configuration in directory `/usr/local/etc/proxycam`,
@@ -164,7 +164,7 @@ The fields are as follows:
     ```
 
   Missing port will be resolved in accordance to the scheme: 80 for `http`,
-  and 443, for `https`. If a camera is using HTTPS, specify its hostname,
+  and 443, for `https`. If the camera is using HTTPS, specify its hostname,
   not the IP, so the SNI will work.
 
 * Camera IP [optional]
@@ -301,7 +301,7 @@ declares one or more domain names, under which this system is to be known.
 After startup, __proxycam__ will contact *LetsEncrypt* to issue certificates
 for each domain name listed in `PROXYCAM_TLS`. The certificates will be
 maintained, by re-issuing them in due time: the maintenance script will wake
-up two days prior to expiry of the certificate.
+up two days prior to the expiry of the certificate.
 
 In order to make sure that restarting the containers won't trigger certificate
 re-issuing, they are kept on the host machine, in docker volume named
