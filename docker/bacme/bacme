@@ -261,25 +261,9 @@ fi
 ACCOUNT_ID="${DOMAIN}/account.id"
 ACCOUNT_KEY="${DOMAIN}/account.key"
 ACCOUNT_PUB="${DOMAIN}/account.pub"
-if [ ! -f $ACCOUNT_ID ]; then
-	log "Getting URL of current subscriber agreement ..."
-	AGREEMENT="$(curl --silent --user-agent ${BACME_UA} ${API}/directory | grep '"termsOfService":' | sed 's/^.*"termsOfService": "\([^"]*\)".*$/\1/' | flatstring)"
-	log "OK ${AGREEMENT}"
 
-
-	# we create a new account key for each certificate request
-	log "Generating account key ..."
-	log "Private key: ${ACCOUNT_KEY}"
-	touch "${ACCOUNT_KEY}"
-	chmod 600 "${ACCOUNT_KEY}"
-	openssl genrsa 4096 > "${ACCOUNT_KEY}"
-	chmod 400 "${ACCOUNT_KEY}"
-	log "Public key: ${ACCOUNT_PUB}"
-	openssl rsa -in "${ACCOUNT_KEY}" -out "${ACCOUNT_PUB}" -pubout
-	log "OK"
-
-
-	# account public key exponent
+jwk_prep() {
+    	# account public key exponent
 	# formatting: Exponent dec => hex => binary => base64url
 	# e.g. 65537 => 0x010001 => ... => AQAB
 	# printf 0.32 and cutting 00 in pairs makes sure we have even number of digits for hexbin
@@ -297,7 +281,26 @@ if [ ! -f $ACCOUNT_ID ]; then
 	# see example in https://tools.ietf.org/html/rfc7638
 	JWK_THUMBPRINT="$(printf "%s" "{\"e\":\"${JWK_E}\",\"kty\":\"RSA\",\"n\":\"${JWK_N}\"}" | openssl dgst -sha256 -binary | base64url)"
 	debug "jwk_thumbprint = ${JWK_THUMBPRINT}"
+}
 
+if [ ! -f $ACCOUNT_ID ]; then
+	log "Getting URL of current subscriber agreement ..."
+	AGREEMENT="$(curl --silent --user-agent ${BACME_UA} ${API}/directory | grep '"termsOfService":' | sed 's/^.*"termsOfService": "\([^"]*\)".*$/\1/' | flatstring)"
+	log "OK ${AGREEMENT}"
+
+
+	# we create a new account key for each certificate request
+	log "Generating account key ..."
+	log "Private key: ${ACCOUNT_KEY}"
+	touch "${ACCOUNT_KEY}"
+	chmod 600 "${ACCOUNT_KEY}"
+	openssl genrsa 4096 > "${ACCOUNT_KEY}"
+	chmod 400 "${ACCOUNT_KEY}"
+	log "Public key: ${ACCOUNT_PUB}"
+	openssl rsa -in "${ACCOUNT_KEY}" -out "${ACCOUNT_PUB}" -pubout
+	log "OK"
+
+	jwk_prep
 
 	log "Registering account ..."
 	if [ -n "${CONTACT_EMAIL}" ];
@@ -312,6 +315,7 @@ if [ ! -f $ACCOUNT_ID ]; then
 	debug "Account URL: ${ACCOUNT_URL}"
 	log "OK"
 else
+	jwk_prep
 	ACCOUNT_URL=$(head -n1 $ACCOUNT_ID)
 	debug "Account URL: ${ACCOUNT_URL}"
 fi
