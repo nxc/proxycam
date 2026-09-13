@@ -2,7 +2,6 @@
 
 certdir=/etc/ssl/acme/crt
 mkdir -p $certdir
-xenv -o/etc/pound/pound.cfg /etc/pound/pound.cfg.xenv
 if [ -n "$PROXYCAM_TLS" ] &&
    [ -z "$(find $certdir -mindepth 1 -maxdepth 1 -name '*.pem')" ]
 then
@@ -19,9 +18,5 @@ fi
 
 if [ -n "$(find /var/newconfig -mindepth 1 -maxdepth 1 -name '*.spec')" ]; then
     /etc/pound/buildconf/rebuild.sh -n /var/newconfig/*.spec
-fi
-
-if ! [ "$(ls -A /etc/pound/conf.d)" ]; then
-    echo "# placeholder" > /etc/pound/conf.d/_dummy.conf
 fi
 

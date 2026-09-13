@@ -25,7 +25,7 @@ RUN luarocks --lua-version=5.3 install lua-glob-pattern
 COPY direvent.conf /etc
 COPY pies/*.conf /pies/conf.d/
 COPY pound /etc
-RUN mkdir -p /etc/rc.d /etc/pound/conf.d \
+RUN mkdir -p /etc/rc.d /etc/pound/inc \
 	     /var/lib/pound/.well-known/acme-challenge \
 	     /proxycam
 COPY rc.d/rc.* /etc/rc.d/

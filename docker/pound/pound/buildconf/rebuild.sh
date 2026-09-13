@@ -1,56 +1,51 @@
 #! /bin/sh
 
 preproc() {
-    local dir=${1:?}
-    local file=${2:?}
-    local line=0
+    local outfile=${1:?}
+    shift
     local idxfile=/tmp/rebuild.idx.$$
     > $idxfile
-    while read camid url ip port rest
+    local errfile=/tmp/rebuild.err
+    rm -f $errfile
+    for file
     do
-	line=$(($line + 1))
-	case $camid in
-	    \#*) continue
-	esac
-        if [ -z "$camid" ]; then
-	    # skip empty lines
-	    continue
-	elif [ -z "$url" ]; then
-	    echo >&2 "$file:$line: required fields missing"
-	    continue
-	elif [ -n "$rest" ]; then
-	    echo >&2 "$file:$line: extra fields"
-	    continue
-	else
-	    local loc=$(sed -n -e "/^$camid:/s///p" $idxfile)
-	    if [ -n "$loc" ]; then
-		echo >&2 "$file:$line: duplicate camera ID"
-		echo >&2 "$loc: initially defined here"
+	local line=0
+	while read camid url ip port rest
+	do
+	    line=$(($line + 1))
+	    case $camid in
+		\#*) continue
+	    esac
+            if [ -z "$camid" ]; then
+		# skip empty lines
+		continue
+	    elif [ -z "$url" ]; then
+		echo >&2 "$file:$line: required fields missing"
+		touch $errfile
+		continue
+	    elif [ -n "$rest" ]; then
+		echo >&2 "$file:$line: extra fields"
+		touch $errfile
 		continue
 	    else
-		echo >$idxfile "$camid:$file:$line"
+		local loc=$(sed -n -e "/^$camid:/s///p" $idxfile)
+		if [ -n "$loc" ]; then
+		    echo >&2 "$file:$line: duplicate camera ID"
+		    echo >&2 "$loc: initially defined here"
+	    	    touch $errfile
+		    continue
+		else
+		    echo >$idxfile "$camid:$file:$line"
+		fi
 	    fi
-	fi
 
-	{
-	    echo "#line $line \"$file\""
+            echo "#line $line \"$file\""
 	    echo "DEFSERVICE($camid,$url,$ip,$port)"
-	} | m4 $m4incdir/service.m4 - > $dir/$camid.conf
-    done < $file
+	done < $file
+    done > $outfile
     rm -f $idxfile
+    test ! -f $errfile
 }
-
-tempdir=/tmp/service.conf.$$
-tempconfdir=$tempdir/conf.d
-baddir=/tmp/service.conf.bad
-pidfile=/tmp/$(basename $0).pid
-
-cleanup() {
-    dotlockfile -u $pidfile
-    rm -rf $tempdir
-}
-
-trap "cleanup" 1 2 3 15
 
 pounddir=/etc/pound
 m4incdir=$pounddir/buildconf
@@ -72,6 +67,18 @@ done
 
 shift $(($OPTIND - 1))
 
+confdir=$pounddir/inc
+conffile=$confdir/cameras.inc
+tempfile=$confdir/cameras.tmp
+badfile=$confdir/cameras.bad
+pidfile=/tmp/$(basename $0).pid
+
+cleanup() {
+    dotlockfile -u $pidfile
+}
+
+trap "cleanup" 1 2 3 15
+
 if [ $# -eq 0 ]; then
     if [ -n "$DIREVENT_FILE" ]; then
 	if dotlockfile -p -r 0 $pidfile; then
@@ -90,37 +97,23 @@ else
     filelist="$@"
 fi
 
-confdir=$pounddir/conf.d
-bakdir=$pounddir/conf.bak
-
-mkdir -p $tempconfdir
-rm -rf $baddir
-
-for spec in $filelist
-do
-    if ! preproc $tempconfdir $spec; then
-	echo >& "$0: error while preprocessing $spec"
-	mv $tempconfdir $baddir
-	echo >&2 "$0: malformed configuration files left in $baddir"
-	cleanup
-	exit 1
-     fi
-done
-
-if ! [ "$(ls -A $tempconfdir)" ]; then
-    echo "# placeholder" > $tempconfdir/_dummy.conf
-fi
-
-if ! pound -c -Winclude-dir=$tempdir -f $pounddir/pound.cfg; then
-    mv $tempconfdir $baddir
-    echo >&2 "$0: malformed configuration files left in $baddir"
+if ! preproc $tempfile $filelist; then
+    echo >& "$0: errors while preprocessing specifications"
+    mv $tempfile $badfile
+    echo >&2 "$0: malformed configuration left in $badfile"
     cleanup
     exit 1
 fi
 
-rm -rf $bakdir
-mv $confdir $bakdir
-rsync -a --delete $tempconfdir/ $confdir
+
+if ! CAMERAS=$tempfile pound -c -f /etc/pound.cfg; then
+    mv $tempfile $badfile
+    echo >&2 "$0: malformed configuration left in $badfile"
+    cleanup
+    exit 1
+fi
+
+mv $tempfile $conffile
 cleanup
 
 if [ $norestart -eq 0 ]; then
