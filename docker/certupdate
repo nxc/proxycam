@@ -36,7 +36,7 @@ cmpaltnames() {
 }
 
 if [ ! -f $certdir/$1.pem ] || \
-       ! openssl x509 -in $certdir/$1.pem -checkend $delta || \
+       ! openssl x509 -in $certdir/$1.pem -checkend $delta >/dev/null || \
        ! cmpaltnames; then
     /proxycam/bacme -C /etc/ssl/acme -m -o $certdir $T \
 		    -w /var/lib/pound "$@" && \
